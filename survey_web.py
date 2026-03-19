@@ -3,6 +3,8 @@ import json
 import re
 from pathlib import Path
 from datetime import datetime, date
+
+import pandas as pd
 import streamlit as st
 
 # ----------------------------
@@ -36,10 +38,7 @@ FIXED_STATES = frozenset([
     "Critical Mental Drain"
 ])
 
-# tuple type explicitly used for assessment criteria
 SAVE_FORMATS = ("TXT", "CSV", "JSON")
-
-# set type explicitly used for assessment criteria
 VALID_RESPONSE_VALUES = {1, 2, 3, 4, 5}
 
 
@@ -290,25 +289,174 @@ def interpret_score(score):
     return "Unknown State"
 
 
+def get_state_explanation(state):
+    if state == "Mentally Clear":
+        return (
+            "Your responses suggest that you are coping well with daily demands. "
+            "Mental strain appears low, and your decision-making resources seem stable."
+        )
+    elif state == "Mild Cognitive Load":
+        return (
+            "You may be experiencing a manageable level of mental pressure. "
+            "This level usually reflects occasional tiredness, but not serious overload."
+        )
+    elif state == "Noticeable Decision Fatigue":
+        return (
+            "Your responses indicate that mental tiredness is beginning to affect concentration "
+            "and daily decisions. This suggests a noticeable strain on cognitive resources."
+        )
+    elif state == "High Mental Overload":
+        return (
+            "Your score suggests strong mental pressure. Decision-making, focus, and emotional control "
+            "may be affected by the current level of overload."
+        )
+    elif state == "Severe Cognitive Exhaustion":
+        return (
+            "Your responses indicate a serious level of mental exhaustion. This may affect productivity, "
+            "motivation, and overall psychological well-being."
+        )
+    elif state == "Critical Mental Drain":
+        return (
+            "Your score suggests extremely high psychological strain. Immediate steps to reduce overload "
+            "and seek support may be necessary."
+        )
+    return "No explanation available."
+
+
+def get_state_recommendations(state):
+    if state == "Mentally Clear":
+        return [
+            "Maintain your current balance between work and rest.",
+            "Continue healthy routines such as sleep, planning, and breaks.",
+            "Monitor stress regularly to keep this positive state stable."
+        ]
+    elif state == "Mild Cognitive Load":
+        return [
+            "Reduce unnecessary daily decisions where possible.",
+            "Use short breaks to prevent mental build-up.",
+            "Review your schedule and prioritize the most important tasks."
+        ]
+    elif state == "Noticeable Decision Fatigue":
+        return [
+            "Limit multitasking and structure tasks more clearly.",
+            "Use checklists or routines to reduce mental effort.",
+            "Protect time for rest and recovery during busy periods."
+        ]
+    elif state == "High Mental Overload":
+        return [
+            "Reduce workload where possible and simplify decision-making.",
+            "Use stronger time-management boundaries.",
+            "Consider speaking to an academic advisor, mentor, or support service."
+        ]
+    elif state == "Severe Cognitive Exhaustion":
+        return [
+            "Take recovery seriously and reduce unnecessary pressure immediately.",
+            "Seek support from a lecturer, counselor, or trusted professional.",
+            "Avoid making major decisions while mentally exhausted."
+        ]
+    elif state == "Critical Mental Drain":
+        return [
+            "Seek immediate support from a counselor, mental health professional, or trusted adult.",
+            "Reduce demands urgently and prioritize safety and recovery.",
+            "Do not continue under intense pressure without support."
+        ]
+    return ["No recommendation available."]
+
+
+def build_chart_data(total_score):
+    max_score = 80
+    remaining = max_score - total_score
+    return pd.DataFrame(
+        {
+            "Category": ["Your Score", "Remaining to Maximum"],
+            "Value": [total_score, remaining]
+        }
+    )
+
+
+def show_state_banner(state):
+    if state == "Mentally Clear":
+        st.success("Assessment Outcome: Mentally Clear")
+    elif state == "Mild Cognitive Load":
+        st.info("Assessment Outcome: Mild Cognitive Load")
+    elif state == "Noticeable Decision Fatigue":
+        st.warning("Assessment Outcome: Noticeable Decision Fatigue")
+    elif state == "High Mental Overload":
+        st.warning("Assessment Outcome: High Mental Overload")
+    elif state == "Severe Cognitive Exhaustion":
+        st.error("Assessment Outcome: Severe Cognitive Exhaustion")
+    elif state == "Critical Mental Drain":
+        st.error("Assessment Outcome: Critical Mental Drain")
+
+
 def display_result_web(data, title):
     st.subheader(title)
-    st.write(f"**Full Name:** {data['full_name']}")
-    st.write(f"**Date of Birth:** {data['date_of_birth']}")
-    st.write(f"**Student ID:** {data['student_id']}")
-    st.metric("Total Score", data["total_score"])
-    st.metric("Average Score", data["average_score"])
-    st.write(f"**Psychological State:** {data['psychological_state']}")
-    st.write(f"**Completed:** {data['completed']}")
-    st.write(f"**Completion Time:** {data['completion_time']}")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Full Name:** {data['full_name']}")
+        st.write(f"**Date of Birth:** {data['date_of_birth']}")
+        st.write(f"**Student ID:** {data['student_id']}")
+        st.write(f"**Completion Time:** {data['completion_time']}")
+    with col2:
+        st.metric("Total Score", data["total_score"])
+        st.metric("Average Score", data["average_score"])
+        st.write(f"**Psychological State:** {data['psychological_state']}")
+        st.write(f"**Completed:** {data['completed']}")
+
+    show_state_banner(data["psychological_state"])
+
+    st.markdown("### Interpretation")
+    st.write(get_state_explanation(data["psychological_state"]))
+
+    st.markdown("### Recommendations")
+    recommendations = get_state_recommendations(data["psychological_state"])
+    for recommendation in recommendations:
+        st.write(f"- {recommendation}")
+
+    st.markdown("### Score Visualization")
+    max_score = 80
+    score_ratio = min(data["total_score"] / max_score, 1.0)
+    st.progress(score_ratio, text=f"Score progress: {data['total_score']} out of {max_score}")
+
+    chart_data = build_chart_data(data["total_score"])
+    chart_df = chart_data.set_index("Category")
+    st.bar_chart(chart_df)
+
+    st.markdown("### How the System Works")
+    st.write(
+        "This assessment uses weighted response values for each question. "
+        "Individual response scores are summed to calculate a total score, "
+        "and the total score is then matched to a psychological state band."
+    )
 
 
 # ----------------------------
-# Streamlit page
+# Page config and header
 # ----------------------------
-st.set_page_config(page_title="Decision Fatigue Survey", layout="centered")
+st.set_page_config(
+    page_title="Psychological Assessment System",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
 
 st.title("Psychological Assessment System")
 st.subheader("Decision Fatigue and Mental Overload Survey")
+
+with st.sidebar:
+    st.header("System Overview")
+    st.write(
+        "This web application evaluates decision fatigue and mental overload "
+        "through a structured psychological questionnaire."
+    )
+    st.write("**Core features:**")
+    st.write("- Input validation for student details")
+    st.write("- Weighted questionnaire scoring")
+    st.write("- Automated psychological state classification")
+    st.write("- Saving results in TXT, CSV, or JSON")
+    st.write("- Loading existing saved results")
+    st.write("- Public web deployment for online access")
+
 st.success("Please complete all fields before submitting.")
 
 questions = load_questions()
@@ -322,39 +470,40 @@ tab1, tab2 = st.tabs(["Start New Questionnaire", "Load Existing Result"])
 with tab1:
     st.write("Please fill in your details and answer all questions.")
 
-    with st.form("survey_form"):
+    with st.container(border=True):
         st.subheader("Student Information")
 
-        full_name = st.text_input("Enter surname and first name")
-        dob = st.date_input(
-            "Enter date of birth",
-            value=None,
-            min_value=date(1900, 1, 1),
-            max_value=date.today()
-        )
-        student_id = st.text_input("Enter student ID number")
-
-        st.subheader("Survey Questions")
-        responses = []
-
-        question_range = range(1, len(questions) + 1)
-
-        for i in question_range:
-            question_data = questions[i - 1]
-            progress_value = i / len(questions)
-            st.progress(progress_value, text=f"Progress: Question {i} of {len(questions)}")
-
-            answer = st.radio(
-                question_data["question"],
-                options=[1, 2, 3, 4, 5],
-                format_func=lambda x: f"{x}. {OPTIONS[x - 1]}",
-                key=f"q_{i}",
-                index=None
+        with st.form("survey_form"):
+            full_name = st.text_input("Enter surname and first name")
+            dob = st.date_input(
+                "Enter date of birth",
+                value=None,
+                min_value=date(1900, 1, 1),
+                max_value=date.today()
             )
-            responses.append(answer)
+            student_id = st.text_input("Enter student ID number")
 
-        save_choice = st.selectbox("Choose save format", SAVE_FORMATS)
-        submit_button = st.form_submit_button("Submit Questionnaire")
+            st.subheader("Survey Questions")
+            responses = []
+
+            question_range = range(1, len(questions) + 1)
+
+            for i in question_range:
+                question_data = questions[i - 1]
+                progress_value = i / len(questions)
+                st.progress(progress_value, text=f"Progress: Question {i} of {len(questions)}")
+
+                answer = st.radio(
+                    question_data["question"],
+                    options=[1, 2, 3, 4, 5],
+                    format_func=lambda x: f"{x}. {OPTIONS[x - 1]}",
+                    key=f"q_{i}",
+                    index=None
+                )
+                responses.append(answer)
+
+            save_choice = st.selectbox("Choose save format", SAVE_FORMATS)
+            submit_button = st.form_submit_button("Submit Questionnaire")
 
     if submit_button:
         valid_name, name_message = validate_name(full_name)
@@ -401,7 +550,7 @@ with tab1:
                 result_data = survey_result.to_dict()
 
                 st.divider()
-                display_result_web(result_data, "Survey Result")
+                display_result_web(result_data, "Assessment Result")
 
                 saved = save_result(result_data, save_choice)
 
@@ -422,6 +571,6 @@ with tab2:
 
         if saved_data:
             st.divider()
-            display_result_web(saved_data, "Loaded Result")
+            display_result_web(saved_data, "Loaded Assessment Result")
         else:
             st.error(f"No valid saved {load_format} result was found.")
