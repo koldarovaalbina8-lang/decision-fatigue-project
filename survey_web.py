@@ -40,6 +40,7 @@ FIXED_STATES = frozenset([
 
 SAVE_FORMATS = ("TXT", "CSV", "JSON")
 VALID_RESPONSE_VALUES = {1, 2, 3, 4, 5}
+MAX_SCORE = 80
 
 
 # ----------------------------
@@ -364,8 +365,7 @@ def get_state_recommendations(state):
 
 
 def build_chart_data(total_score):
-    max_score = 80
-    remaining = max_score - total_score
+    remaining = MAX_SCORE - total_score
     return pd.DataFrame(
         {
             "Category": ["Your Score", "Remaining to Maximum"],
@@ -406,6 +406,16 @@ def display_result_web(data, title):
 
     show_state_banner(data["psychological_state"])
 
+    st.markdown(
+        f"""
+### Personalized Insight
+
+Based on your responses, **{data['full_name']}**, your current cognitive condition is classified as:
+
+### **{data['psychological_state']}**
+"""
+    )
+
     st.markdown("### Interpretation")
     st.write(get_state_explanation(data["psychological_state"]))
 
@@ -415,19 +425,26 @@ def display_result_web(data, title):
         st.write(f"- {recommendation}")
 
     st.markdown("### Score Visualization")
-    max_score = 80
-    score_ratio = min(data["total_score"] / max_score, 1.0)
-    st.progress(score_ratio, text=f"Score progress: {data['total_score']} out of {max_score}")
+    score_ratio = min(data["total_score"] / MAX_SCORE, 1.0)
+    st.progress(score_ratio, text=f"Score progress: {data['total_score']} out of {MAX_SCORE}")
 
     chart_data = build_chart_data(data["total_score"])
     chart_df = chart_data.set_index("Category")
     st.bar_chart(chart_df)
 
+    st.markdown("### Model Explanation")
+    st.write(
+        "The system applies a rule-based scoring model where each response is converted into "
+        "a weighted numerical value. Reverse-coded questions adjust for positive indicators. "
+        "The total score is mapped into predefined cognitive state bands, simulating a "
+        "classification model commonly used in psychological assessment systems."
+    )
+
     st.markdown("### How the System Works")
     st.write(
-        "This assessment uses weighted response values for each question. "
-        "Individual response scores are summed to calculate a total score, "
-        "and the total score is then matched to a psychological state band."
+        "This assessment tool evaluates decision fatigue and mental overload by combining "
+        "validated input fields, structured survey questions, weighted response scoring, "
+        "state classification, and persistent result storage."
     )
 
 
@@ -442,6 +459,12 @@ st.set_page_config(
 
 st.title("Psychological Assessment System")
 st.subheader("Decision Fatigue and Mental Overload Survey")
+st.markdown("""
+### Intelligent Decision Fatigue Analysis System
+
+This system simulates an AI-based assessment model that evaluates cognitive load
+using weighted psychological indicators derived from structured survey responses.
+""")
 
 with st.sidebar:
     st.header("System Overview")
