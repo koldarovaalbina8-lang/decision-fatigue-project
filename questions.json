@@ -1,0 +1,35 @@
+[
+{"question": "How often do you feel mentally tired after making many decisions in one day?", "reverse": false},
+{"question": "How often do small choices feel harder than they should?", "reverse": false},
+{"question": "How often do you struggle to think clearly after a busy day?", "reverse": false},
+{"question": "How often do too many options make it difficult for you to decide?", "reverse": false},
+{"question": "How often do you delay making decisions because your mind feels overloaded?", "reverse": false},
+{"question": "How often do you feel drained after switching between several tasks?", "reverse": false},
+{"question": "How often do you find it difficult to focus when you have many things to choose between?", "reverse": false},
+{"question": "How often do you feel frustrated by having to make repeated decisions?", "reverse": false},
+{"question": "How often do you feel that your mind is overloaded by daily responsibilities?", "reverse": false},
+{"question": "How often do you second-guess your decisions because you feel mentally tired?", "reverse": false},
+{"question": "How often do you avoid making choices because they feel exhausting?", "reverse": false},
+{"question": "How often do you feel less productive after dealing with many decisions?", "reverse": false},
+{"question": "How often do you lose patience when too many decisions need to be made?", "reverse": false},
+{"question": "How often do you feel confused when several choices must be made quickly?", "reverse": false},
+{"question": "How often do you continue thinking about unresolved decisions even when trying to rest?", "reverse": false},
+
+{"question": "How often do you feel mentally fresh when making important decisions?", "reverse": true},
+{"question": "How often can you stay focused even after a long day of problem-solving?", "reverse": true},
+{"question": "How often do you feel confident when choosing between several options?", "reverse": true},
+{"question": "How often do you recover quickly after a mentally demanding day?", "reverse": true},
+{"question": "How often do you feel in control when many decisions need your attention?", "reverse": true}
+]
+
+
+
+
+
+
+
+
+
+
+
+
